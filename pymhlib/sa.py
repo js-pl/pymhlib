@@ -80,21 +80,23 @@ class SA(Scheduler):
         """Perform simulated annealing with geometric cooling on given solution."""
 
         def sa_iteration(sol: Solution, _par, result):
-            if settings.mh_vis_log != "None":
-                prev_sol = sol.copy()
-
             neighborhood_move, delta_obj = self.random_move_delta_eval(sol)
             acceptance = self.metropolis_criterion(sol, delta_obj)
             if acceptance:
+                if settings.mh_vis_log != "None":
+                    prev_sol = sol.copy()
+
                 self.apply_neighborhood_move(sol, neighborhood_move)
                 sol.obj_val = sol.obj_val + delta_obj
                 result.changed = True
 
                 if settings.mh_vis_log != "None":
-                    result.vis_log_info = SAInfo(sol, prev_sol, delta_obj, self.temperature, True, neighborhood_move)
+                    result.vis_log_info = SAInfo(sol, prev_sol, sol.obj(), delta_obj, self.temperature, True, neighborhood_move)
             else:
                 if settings.mh_vis_log != "None":
-                    result.vis_log_info = SAInfo(sol, sol, delta_obj, self.temperature, False, neighborhood_move)
+                    discarded_sol = sol.copy()
+                    self.apply_neighborhood_move(discarded_sol, neighborhood_move)
+                    result.vis_log_info = SAInfo(discarded_sol, sol, sol.obj(), delta_obj, self.temperature, False, neighborhood_move)
             if self.iter_cb is not None:
                 self.iter_cb(self.iteration, sol, self.temperature, acceptance)
         sa_method = Method("sa", sa_iteration, 0)
@@ -117,9 +119,9 @@ class SA(Scheduler):
         self.sa(sol)
 
 class SAInfo:
-    def __init__(self, solution, prev_solution, delta_obj, temperature, accepted, move):
+    def __init__(self, solution, prev_solution, obj, delta_obj, temperature, accepted, move):
         self.solution = solution
-        self.obj = solution.obj()
+        self.obj = obj
         self.delta_obj = delta_obj
         self.prev_solution = prev_solution
         self.temperature = temperature

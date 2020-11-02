@@ -58,18 +58,12 @@ def init_logger():
     # logger for visualization
     vis_logger = logging.getLogger("pymhlib_vis")
     if settings.mh_vis_log == 'None':
-        pass # todo: discuss with daniel and niki, maybe dont even create it if not explicitly stated that we want to do visual logging
-    else:
+        pass # TODO: discuss with daniel and niki, maybe dont even create it if not explicitly stated that we want to do visual logging
+    else: # TODO: maybe make this logger buffered
         vis_file_handler = logging.FileHandler(settings.mh_vis_log, "w")
         vis_file_handler.setFormatter(formatter)
-        vis_handler = logging.handlers.MemoryHandler(
-            capacity=1024 * 100,
-            flushLevel=logging.ERROR,
-            target=vis_file_handler
-        )
-        vis_handler.setFormatter(formatter)
         vis_logger.handlers = []
-        vis_logger.addHandler(vis_handler)
+        vis_logger.addHandler(vis_file_handler)
         vis_logger.propagate = False
         vis_logger.setLevel(logging.INFO)
 
