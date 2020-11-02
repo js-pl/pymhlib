@@ -18,7 +18,8 @@ parser.add_argument("--mh_out", type=str, default="None",
                     help='file to write general output into (None: stdout)')
 parser.add_argument("--mh_log", type=str, default="None",
                     help='file to write iteration-wise logging into (None: stdout)')
-
+parser.add_argument("--mh_vis_log", type=str, default="None",
+                    help='file to write visualization-specific logging into (None: does not get written)')
 
 def init_logger():
     """Initialize logger objects."""
@@ -54,6 +55,23 @@ def init_logger():
     iter_logger.propagate = False
     iter_logger.setLevel(logging.INFO)
 
+    # logger for visualization
+    vis_logger = logging.getLogger("pymhlib_vis")
+    if settings.mh_vis_log == 'None':
+        pass # todo: discuss with daniel and niki, maybe dont even create it if not explicitly stated that we want to do visual logging
+    else:
+        vis_file_handler = logging.FileHandler(settings.mh_vis_log, "w")
+        vis_file_handler.setFormatter(formatter)
+        vis_handler = logging.handlers.MemoryHandler(
+            capacity=1024 * 100,
+            flushLevel=logging.ERROR,
+            target=vis_file_handler
+        )
+        vis_handler.setFormatter(formatter)
+        vis_logger.handlers = []
+        vis_logger.addHandler(vis_handler)
+        vis_logger.propagate = False
+        vis_logger.setLevel(logging.INFO)
 
 class LogLevel:
     """Manage indentation of log messages according to specified levels.

@@ -42,15 +42,16 @@ class Result:
         - terminate: if true, a termination condition has been fulfilled
         - log_info: customized log info
     """
-    __slots__ = ('changed', 'terminate', 'log_info')
+    __slots__ = ('changed', 'terminate', 'log_info', 'vis_log_info')
 
     def __init__(self):
         self.changed = True
         self.terminate = False
         self.log_info = None
+        self.vis_log_info = None
 
     def __repr__(self):
-        return f"(changed={self.changed}, terminate={self.terminate}, log_info={self.log_info})"
+        return f"(changed={self.changed}, terminate={self.terminate}, log_info={self.log_info})" # TODO: maybe add vis_log_info here too
 
 
 @dataclass
@@ -102,6 +103,7 @@ class Scheduler(ABC):
         - run_time: overall runtime (set when terminating)
         - logger: pymhlib's logger for logging general info
         - iter_logger: pymhlib's logger for logging iteration info
+        - vis_logger: pymhlib's logger for logging visualisation info
         - own_settings: own settings object with possibly individualized parameter values
     """
     eps = 1e-12  # epsilon value for is_logarithmic_number()
@@ -130,6 +132,7 @@ class Scheduler(ABC):
         self.run_time = None
         self.logger = logging.getLogger("pymhlib")
         self.iter_logger = logging.getLogger("pymhlib_iter")
+        self.vis_logger = logging.getLogger("pymhlib_vis")
         self.log_iteration_header()
         if self.incumbent_valid:
             self.log_iteration('-', float('NaN'), sol, True, True, None)
@@ -195,6 +198,10 @@ class Scheduler(ABC):
         new_incumbent = self.update_incumbent(sol, t_end - self.time_start)
         terminate = self.check_termination()
         self.log_iteration(method.name, obj_old, sol, new_incumbent, terminate, res.log_info)
+        
+        if settings.mh_vis_log != 'None':
+            self.log_iteration_for_visualization(res.vis_log_info)
+
         if terminate:
             self.run_time = time.process_time() - self.time_start
             res.terminate = True
@@ -357,6 +364,12 @@ class Scheduler(ABC):
                 f"{method_name:<20} {log_info if log_info is not None else ''}"
 
             self.iter_logger.info(s)
+
+    def log_iteration_for_visualization(self, vis_log_info):
+        '''TODO: doc'''
+        if vis_log_info != None:
+            self.vis_logger.info(str(vis_log_info))
+
 
     @abstractmethod
     def run(self):

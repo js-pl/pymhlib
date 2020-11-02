@@ -13,7 +13,7 @@ import numpy as np
 from math import exp
 
 from pymhlib.scheduler import Method, Scheduler, MethodStatistics
-from pymhlib.settings import get_settings_parser
+from pymhlib.settings import settings, get_settings_parser
 from pymhlib.solution import Solution, TObj
 
 parser = get_settings_parser()
@@ -80,12 +80,21 @@ class SA(Scheduler):
         """Perform simulated annealing with geometric cooling on given solution."""
 
         def sa_iteration(sol: Solution, _par, result):
+            if settings.mh_vis_log != "None":
+                prev_sol = sol.copy()
+
             neighborhood_move, delta_obj = self.random_move_delta_eval(sol)
             acceptance = self.metropolis_criterion(sol, delta_obj)
             if acceptance:
                 self.apply_neighborhood_move(sol, neighborhood_move)
                 sol.obj_val = sol.obj_val + delta_obj
                 result.changed = True
+
+                if settings.mh_vis_log != "None":
+                    result.vis_log_info = SAInfo(sol, prev_sol, delta_obj, self.temperature, True, neighborhood_move)
+            else:
+                if settings.mh_vis_log != "None":
+                    result.vis_log_info = SAInfo(sol, sol, delta_obj, self.temperature, False, neighborhood_move)
             if self.iter_cb is not None:
                 self.iter_cb(self.iteration, sol, self.temperature, acceptance)
         sa_method = Method("sa", sa_iteration, 0)
@@ -106,3 +115,24 @@ class SA(Scheduler):
         assert self.incumbent_valid or self.meths_ch
         self.perform_sequentially(sol, self.meths_ch)
         self.sa(sol)
+
+class SAInfo:
+    def __init__(self, solution, prev_solution, delta_obj, temperature, accepted, move):
+        self.solution = solution
+        self.obj = solution.obj()
+        self.delta_obj = delta_obj
+        self.prev_solution = prev_solution
+        self.temperature = temperature
+        self.accepted = accepted
+        self.move = move
+
+    def __str__(self):
+        return (
+            f"S: {str(self.solution)}\n"
+            f"OBJ: {self.obj}\n"
+            f"P: {self.prev_solution}\n"
+            f"DELTA: {self.delta_obj}\n"
+            f"TEMP: {self.temperature}\n"
+            f"ACC: {self.accepted}\n"
+            f"MOV: {self.move}"
+        )
