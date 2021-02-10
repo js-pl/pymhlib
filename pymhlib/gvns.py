@@ -96,3 +96,22 @@ class GVNS(Scheduler):
         assert self.incumbent_valid or self.meths_ch
         self.perform_sequentially(sol, self.meths_ch)
         self.gvns(sol)
+
+class GVNSInfo:
+    def __init__(self, solution, obj, meth_type, neighborhood):
+        """Initialization
+        
+        """
+        self.solution = solution
+        self.obj = obj
+        self.meth_type = meth_type
+        self.neighborhood = neighborhood
+
+
+    def __str__(self):
+        return (
+            f"S: {str(self.solution)}\n"
+            f"OBJ: {self.obj}\n"
+            f"METH: {self.meth_type}\n"
+            f"NBH: {self.neighborhood}"
+        )
