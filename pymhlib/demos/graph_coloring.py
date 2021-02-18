@@ -3,6 +3,9 @@
 Given a graph and an number of colors, color each node with one color so that
 the number of adjacent nodes having the same color is minimized.
 """
+import sys
+pymhlib_path = "C:/Users/Jonas/Documents/Bachelor Software Engineering/Bakkarbeit/pymhlib/pymhlib"
+sys.path.append(pymhlib_path) #'''  only need to do this if pymhlib not installed as package
 
 import numpy as np
 from typing import Any, Tuple
@@ -149,14 +152,30 @@ class GCSolution(VectorSolution):
         self.x = np.random.randint(self.inst.colors, size=len(self.x))
         self.invalidate()
 
-    def random_move_delta_eval(self) -> Tuple[int, int, TObj]:
+    def random_move_delta_eval(self) -> Tuple[Tuple[int, int], TObj]:
         """Choose a random move and perform delta evaluation for it, return (move, delta_obj)."""
-        raise NotImplementedError
+        #raise NotImplementedError
+        pos = np.random.randint(0, len(self.x))
+        orig_col = self.x[pos]
+        rand_col = np.random.randint(0, self.inst.colors - 1)
+        while(rand_col == orig_col):
+            rand_col = np.random.randint(0, self.inst.colors - 1)
+        
+        orig_obj = self.obj()
+        self.x[pos] = rand_col
+        delta_obj = self.obj() - orig_obj
+        self.x[pos] = orig_col
+        return (pos, rand_col), delta_obj
 
-    def apply_neighborhood_move(self, pos, color: int):
+
+
+    '''def apply_neighborhood_move(self, pos, color: int):
         """This method applies a given neighborhood move accepted by SA,
             without updating the obj_val or invalidating, since obj_val is updated incrementally by the SA scheduler."""
-        self.x[pos] = color
+        self.x[pos] = color'''
+
+    def apply_neighborhood_move(self, move: Tuple[int, int]):
+        self.x[move[0]] = move[1]
 
     def crossover(self, other: 'GCSolution') -> 'GCSolution':
         """ Preform uniform crossover."""
